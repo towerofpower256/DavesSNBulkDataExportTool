@@ -82,6 +82,9 @@ class SNDataExport:
 
         self.log.info("Exporting from table: {0}".format(self.getOption("table")))
         self.log.info("Query: {0}".format(self.getOption("query")))
+        
+        rowLimit = int(self.getOption("row_limit"))
+        if (rowLimit > 0): self.log.info("Row limit: {0}".format(rowLimit))
 
     def run(self):
         self.log.info("Running")
@@ -95,6 +98,8 @@ class SNDataExport:
             self.pageSizeInt = int(self.getOption("pageSize"))
             self.pageIdx = 0
             self.pageOffset = 0
+            self.rowLimit = int(self.getOption("row_limit"))
+            self.rowCount = 0
 
             commonParams = {}
             commonParams["sysparm_limit"] = self.getOption("pageSize", self.pageSizeInt)
@@ -125,13 +130,16 @@ class SNDataExport:
             
             self.log.debug("Writing headers")
             self.csvWriter.writeheader()
-            #self.csvWriter.writerow(self.getHeaderNamesFromJson(firstResponseJson["result"][0]))
+            
 
             # Write the other rows
             self.log.debug("Writing results")
-            #self.csvWriter.writerows(firstResponseJson["result"])
             for row in firstResponseJson["result"]:
+                if (self.rowLimit > 0 and self.rowCount > self.rowLimit):
+                    self.log.info("Row limit reached: {0}".format(self.rowLimit))
+                    break
                 self.csvWriter.writerow(row)
+                self.rowCount = self.rowCount + 1
 
             
             if (firstResponseCount < self.pageSizeInt):
@@ -156,11 +164,17 @@ class SNDataExport:
 
                     self.log.debug("Writing results")
                     for row in pageResponseJson["result"]:
-                        self.csvWriter.writerow(row)
+                        if (self.rowLimit > 0 and self.rowCount > self.rowLimit):
+                            self.log.info("Row limit reached: {0}".format(self.rowLimit))
+                            break
 
+                        self.csvWriter.writerow(row)
+                        self.rowCount = self.rowCount + 1
+                        
                     if (pageResponseCount < self.pageSizeInt):
                         self.log.info("No more pages")
                         return
+
         except Exception as ex:
             self.log.error("Unhandled exception occurred! {0}".format(ex.__class__.__name__)) 
             raise ex
@@ -219,6 +233,7 @@ parser.add_argument("-d", "--display-value", action="store_true", help="Fetch di
 parser.add_argument("-o", "--output", dest="outputName", type=str, required=True, help="Name of the file to save the data to.")
 parser.add_argument("-a", "--auth-mode", dest="authType", choices=["none", "basic"], default="none", help="Type of authentication. Default: none")
 parser.add_argument("-q", "--query", type=str, default="ORDERBYsys_id", help="Query to use on the table when fetching data.")
+parser.add_argument("-l", "--row-limit", type=int, default=0, help="Limit how many rows to export")
 parser.add_argument("-f", "--fields", type=str, help="A comma-separated list of fields to include. Can dot-walk through reference fields (e.g. caller_id.email). Leave blank for all fields.")
 parser.add_argument("--basic-username", dest="basic_auth_username", type=str, help="Basic authentication username.")
 parser.add_argument("--basic-password", dest="basic_auth_password", type=str, help="Basic authentication password.")
