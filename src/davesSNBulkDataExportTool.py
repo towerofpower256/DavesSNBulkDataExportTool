@@ -99,9 +99,8 @@ class SNDataExport:
             commonParams = {}
             commonParams["sysparm_limit"] = self.getOption("pageSize", self.pageSizeInt)
             commonParams["sysparm_exclude_reference_link"] = "true" # Always exclude reference links
-            commonParams["sysparm_display_value"] = False
+            commonParams["sysparm_display_value"] = bool(self.getOption("display_value"))
             commonParams["sysparm_query"] = self.getOption("query")
-            if (bool(self.getOption("useDisplayValue"))): commonParams["sysparm_display_value"] = True
             if (self.getOption("fields")): commonParams["sysparm_fields"] = self.getOption("fields")
 
             self.log.info("Page 1 offset 0 - {max}".format(max=self.pageSizeInt))
@@ -216,7 +215,7 @@ parser.add_argument("-p", "--pagesize", dest="pageSize", type=int, default=SNDat
 parser.add_argument("-t", "--table", type=str, required=True, help="The ServiceNow table name to export from. E.g. 'incident'")
 parser.add_argument("-n", "--instance-name", dest="instanceName", type=str, help="The name of the ServiceNow instance. E.g. 'dev71826'")
 parser.add_argument("-N", "--instance-url", dest="instanceUrl", type=str, help="The hostname URL of the ServiceNow instance, if the instance has a custom URL. E.g. 'dev71826.custom-url.co.uk")
-parser.add_argument("-d", "--displayvalue", action="store_true", help="Fetch displayvalues, instead of system values")
+parser.add_argument("-d", "--display-value", action="store_true", help="Fetch displayvalues, instead of system values")
 parser.add_argument("-o", "--output", dest="outputName", type=str, required=True, help="Name of the file to save the data to.")
 parser.add_argument("-a", "--auth-mode", dest="authType", choices=["none", "basic"], default="none", help="Type of authentication. Default: none")
 parser.add_argument("-q", "--query", type=str, default="ORDERBYsys_id", help="Query to use on the table when fetching data.")
