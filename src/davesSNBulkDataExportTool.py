@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 import requests # For making web calls
 from requests.auth import HTTPBasicAuth
 from requests.models import HTTPError
+import time # For execution timing
+from datetime import timedelta
 
 class SNDataExport:
     HEADER_COUNT="X-Total-Count"
@@ -248,7 +250,9 @@ if (args["verbose"]):
 logging.basicConfig(level=logLevel)
 
 # Run
+startTime = time.perf_counter()
 snde = SNDataExport()
 snde.setupOptions(args)
 snde.run()
 snde.log.info("Finished!")
+snde.log.info("Execution time: {0}s".format(round(time.perf_counter() - startTime, 2)))
